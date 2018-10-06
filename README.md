@@ -1,6 +1,6 @@
 # MuchSlug
 
-TODO: Write a gem description
+Friendly, human-readable identifiers for database records.
 
 ## Usage
 

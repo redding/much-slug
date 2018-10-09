@@ -4,7 +4,28 @@ Friendly, human-readable identifiers for database records.
 
 ## Usage
 
-TODO: Write code samples and usage instructions here
+## Active Record
+
+```ruby
+require "much-slug/activerecord"
+
+class ProjectRecord < ApplicationRecord
+  self.table_name = "projects"
+
+  include MuchSlug::ActiveRecord
+  has_slug({
+    :source       => proc{ "#{self.id}-#{self.abbrev}" },
+    :preprocessor => :upcase
+  })
+  before_update :reset_slug, :if => :abbrev_changed?
+
+  # ...
+end
+```
+
+## Sequel
+
+TODO
 
 ## Installation
 

@@ -19,5 +19,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_development_dependency("assert", ["~> 2.16.5"])
+  gem.add_development_dependency("ardb",   ["~> 0.28.3"])
+
+  gem.add_dependency("much-plugin", ["~> 0.2.0"])
 
 end

@@ -41,11 +41,13 @@ module MuchSlug
         slug_source = record_instance.send(attr_name)
       end
 
-      generated_slug = Slug.new(slug_source, {
-        :preprocessor      => config[:preprocessor_proc],
-        :separator         => config[:separator],
-        :allow_underscores => config[:allow_underscores]
-      })
+      generated_slug =
+        Slug.new(
+          slug_source,
+          preprocessor:      config[:preprocessor_proc],
+          separator:         config[:separator],
+          allow_underscores: config[:allow_underscores]
+        )
       next if record_instance.send(attr_name) == generated_slug
       record_instance.send("#{attr_name}=", generated_slug)
       yield attr_name, generated_slug

@@ -8,7 +8,7 @@ module MuchSlug
   end
 
   def self.default_preprocessor
-    :downcase
+    :to_s
   end
 
   def self.default_separator

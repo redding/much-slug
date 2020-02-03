@@ -13,9 +13,9 @@ module MuchSlug
     should have_imeths :default_separator
 
     should "know its default attribute, preprocessor and separator" do
-      assert_equal :slug,     subject.default_attribute
-      assert_equal :downcase, subject.default_preprocessor
-      assert_equal '-',       subject.default_separator
+      assert_equal :slug, subject.default_attribute
+      assert_equal :to_s, subject.default_preprocessor
+      assert_equal '-',   subject.default_separator
     end
   end
 end

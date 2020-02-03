@@ -3,7 +3,6 @@ require "much-slug/configs"
 require "much-slug/slug"
 
 module MuchSlug
-
   def self.default_attribute
     :slug
   end
@@ -51,7 +50,5 @@ module MuchSlug
       record_instance.send("#{attr_name}=", generated_slug)
       yield attr_name, generated_slug
     end
-
   end
-
 end

@@ -5,7 +5,6 @@ require "much-plugin"
 require "ardb/record_spy"
 
 module MuchSlug::ActiveRecord
-
   class UnitTests < Assert::Context
     desc "MuchSlug::ActiveRecord"
     setup do
@@ -130,7 +129,6 @@ module MuchSlug::ActiveRecord
     should "raise an argument error if `has_slug` isn't passed a source" do
       assert_raises(ArgumentError){ subject.has_slug }
     end
-
   end
 
   class InitTests < UnitTests
@@ -232,7 +230,5 @@ module MuchSlug::ActiveRecord
       assert_equal exp, subject.send(@slug_attribute)
       assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
     end
-
   end
-
 end

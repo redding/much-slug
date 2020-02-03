@@ -2,7 +2,6 @@ require "assert"
 require "much-slug/slug"
 
 module MuchSlug::Slug
-
   class UnitTests < Assert::Context
     desc "MuchSlug::Slug"
     setup do
@@ -96,7 +95,5 @@ module MuchSlug::Slug
       string = "#{invalid_char}#{Factory.string}-#{Factory.string}#{invalid_char}"
       assert_equal string[1..-2], subject.new(string, @args)
     end
-
   end
-
 end

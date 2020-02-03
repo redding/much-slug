@@ -2,7 +2,6 @@ require "assert"
 require "much-slug"
 
 module MuchSlug
-
   class UnitTests < Assert::Context
     desc "MuchSlug"
     setup do
@@ -18,7 +17,5 @@ module MuchSlug
       assert_equal :downcase, subject.default_preprocessor
       assert_equal '-',       subject.default_separator
     end
-
   end
-
 end

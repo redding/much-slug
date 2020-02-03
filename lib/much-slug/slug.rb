@@ -1,7 +1,5 @@
 module MuchSlug
-
   module Slug
-
     def self.new(string, options = nil)
       options ||= {}
       preprocessor       = options[:preprocessor]
@@ -20,7 +18,5 @@ module MuchSlug
       slug.gsub!(/\A#{regexp_escaped_sep}|#{regexp_escaped_sep}\z/, "")
       slug
     end
-
   end
-
 end

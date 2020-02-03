@@ -2,19 +2,14 @@ require "much-plugin"
 require "much-slug"
 
 module MuchSlug
-
   module ActiveRecord
     include MuchPlugin
 
     plugin_included do
-      extend ClassMethods
-      include InstanceMethods
-
       @much_slug_has_slug_configs = MuchSlug::Configs.new
     end
 
-    module ClassMethods
-
+    plugin_class_methods do
       def has_slug(options = nil)
         options ||= {}
         attribute = MuchSlug.set_has_slug(@much_slug_has_slug_configs, options)
@@ -37,11 +32,9 @@ module MuchSlug
       def much_slug_has_slug_configs
         @much_slug_has_slug_configs
       end
-
     end
 
-    module InstanceMethods
-
+    plugin_instance_methods do
       private
 
       def reset_slug(attribute = nil)
@@ -53,9 +46,6 @@ module MuchSlug
           self.update_column(attr_name, generated_slug)
         end
       end
-
     end
-
   end
-
 end

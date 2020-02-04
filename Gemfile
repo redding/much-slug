@@ -1,8 +1,7 @@
 source "https://rubygems.org"
 
+ruby "~> 2.4"
+
 gemspec
 
-gem "pry", "~> 0.9.0"
-
-# Lock down gem versions because they require a newer version of ruby
-gem 'i18n', "< 0.7"
+gem "pry", "~> 0.12.2"

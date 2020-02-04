@@ -18,9 +18,10 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.add_development_dependency("assert", ["~> 2.16.5"])
+  gem.required_ruby_version = "~> 2.4"
+
+  gem.add_dependency("much-plugin", ["~> 0.2.1"])
+
+  gem.add_development_dependency("assert", ["~> 2.18.1"])
   gem.add_development_dependency("ardb",   ["~> 0.28.3"])
-
-  gem.add_dependency("much-plugin", ["~> 0.2.0"])
-
 end

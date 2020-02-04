@@ -2,7 +2,6 @@ require "assert"
 require "much-slug"
 
 module MuchSlug
-
   class UnitTests < Assert::Context
     desc "MuchSlug"
     setup do
@@ -11,14 +10,13 @@ module MuchSlug
     subject{ @module }
 
     should have_imeths :default_attribute, :default_preprocessor
-    should have_imeths :default_separator
+    should have_imeths :default_separator, :default_allow_underscores
 
-    should "know its default attribute, preprocessor and separator" do
-      assert_equal :slug,     subject.default_attribute
-      assert_equal :downcase, subject.default_preprocessor
-      assert_equal '-',       subject.default_separator
+    should "know its default settings" do
+      assert_equal "slug", subject.default_attribute
+      assert_equal :to_s, subject.default_preprocessor
+      assert_equal "-", subject.default_separator
+      assert_equal true, subject.default_allow_underscores
     end
-
   end
-
 end

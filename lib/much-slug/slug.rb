@@ -1,12 +1,6 @@
 module MuchSlug
-
   module Slug
-
-    def self.new(string, options = nil)
-      options ||= {}
-      preprocessor       = options[:preprocessor]
-      separator          = options[:separator]
-      allow_underscores  = options[:allow_underscores]
+    def self.new(string, preprocessor:, separator:, allow_underscores: true)
       regexp_escaped_sep = Regexp.escape(separator)
 
       slug = preprocessor.call(string.to_s.dup)
@@ -20,7 +14,5 @@ module MuchSlug
       slug.gsub!(/\A#{regexp_escaped_sep}|#{regexp_escaped_sep}\z/, "")
       slug
     end
-
   end
-
 end

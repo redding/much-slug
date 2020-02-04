@@ -5,12 +5,11 @@ require "much-plugin"
 require "ardb/record_spy"
 
 module MuchSlug::ActiveRecord
-
   class UnitTests < Assert::Context
     desc "MuchSlug::ActiveRecord"
     setup do
       source_attribute = @source_attribute = Factory.string.to_sym
-      slug_attribute   = @slug_attribute   = Factory.string.to_sym
+      slug_attribute   = @slug_attribute   = Factory.string
       @record_class = Ardb::RecordSpy.new do
         include MuchSlug::ActiveRecord
         attr_accessor source_attribute, slug_attribute, MuchSlug.default_attribute
@@ -21,65 +20,51 @@ module MuchSlug::ActiveRecord
           @slug_db_column_updates << args
         end
       end
+
+      @has_slug_attribute = Factory.string
+      @has_slug_preprocessor = :downcase
+      @has_slug_separator = Factory.non_word_chars.sample
+      @has_slug_allow_underscores = Factory.boolean
+
+      Assert.stub_tap(@record_class.much_slug_has_slug_registry, :register) { |**kargs|
+        @register_called_with = kargs
+      }
     end
     subject{ @record_class }
 
     should have_imeths :has_slug
-    should have_imeths :much_slug_has_slug_configs
+    should have_imeths :much_slug_has_slug_registry
 
-    should "use much-plugin" do
-      assert_includes MuchPlugin, MuchSlug::ActiveRecord
+    should "not have any has_slug registry entries by default" do
+      assert_kind_of MuchSlug::HasSlugRegistry, subject.much_slug_has_slug_registry
+      assert_empty subject.much_slug_has_slug_registry
     end
 
-    should "not have any has-slug configs by default" do
-      assert_equal({}, subject.much_slug_has_slug_configs)
-    end
+    should "register a new has_slug entry using `has_slug`" do
+      subject.has_slug(
+        source: @source_attribute,
+        attribute: @has_slug_attribute,
+        preprocessor: @has_slug_preprocessor,
+        separator: @has_slug_separator,
+        allow_underscores: @has_slug_allow_underscores
+      )
 
-    should "default the has slug config using `has_slug`" do
-      subject.has_slug :source => @source_attribute
-      string = Factory.string
-      record = subject.new.tap{ |r| r.send("#{@source_attribute}=", string) }
-
-      config = subject.much_slug_has_slug_configs[MuchSlug.default_attribute]
-      assert_equal MuchSlug.default_separator, config[:separator]
-      assert_false config[:allow_underscores]
-
-      source_proc = config[:source_proc]
-      assert_instance_of Proc, source_proc
-      exp = record.send(@source_attribute)
-      assert_equal exp, record.instance_eval(&source_proc)
-
-      upcase_string = string.upcase
-      preprocessor_proc = config[:preprocessor_proc]
-      assert_instance_of Proc, preprocessor_proc
-      exp = upcase_string.send(MuchSlug.default_preprocessor)
-      assert_equal exp, preprocessor_proc.call(upcase_string)
-    end
-
-    should "allow customizing the has slug config using `has_slug`" do
-      separator        = Factory.non_word_chars.sample
-      allow_underscore = Factory.boolean
-      subject.has_slug({
-        :attribute         => @slug_attribute,
-        :source            => @source_attribute,
-        :preprocessor      => :upcase,
-        :separator         => separator,
-        :allow_underscores => allow_underscore
-      })
-
-      config = subject.much_slug_has_slug_configs[@slug_attribute]
-      assert_equal separator,        config[:separator]
-      assert_equal allow_underscore, config[:allow_underscores]
-
-      value = Factory.string.downcase
-      preprocessor_proc = config[:preprocessor_proc]
-      assert_instance_of Proc, preprocessor_proc
-      assert_equal value.upcase, preprocessor_proc.call(value)
+      exp_kargs = {
+        attribute: @has_slug_attribute,
+        source: @source_attribute,
+        preprocessor: @has_slug_preprocessor,
+        separator: @has_slug_separator,
+        allow_underscores: @has_slug_allow_underscores
+      }
+      assert_equal exp_kargs, @register_called_with
     end
 
     should "add validations using `has_slug`" do
-      subject.has_slug :source => @source_attribute
-      exp_attr_name = MuchSlug.default_attribute
+      subject.has_slug(
+        source: @source_attribute,
+        attribute: @has_slug_attribute
+      )
+      exp_attr_name = @has_slug_attribute
 
       validation = subject.validations.find{ |v| v.type == :presence }
       assert_not_nil validation
@@ -94,10 +79,11 @@ module MuchSlug::ActiveRecord
     end
 
     should "not add a unique validation if skipping unique validation" do
-      subject.has_slug({
-        :source                 => @source_attribute,
-        :skip_unique_validation => true
-      })
+      subject.has_slug(
+        source: @source_attribute,
+        attribute: @has_slug_attribute,
+        skip_unique_validation: true
+      )
 
       validation = subject.validations.find{ |v| v.type == :uniqueness }
       assert_nil validation
@@ -105,10 +91,11 @@ module MuchSlug::ActiveRecord
 
     should "allow customizing its validations using `has_slug`" do
       unique_scope = Factory.string.to_sym
-      subject.has_slug({
-        :source       => @source_attribute,
-        :unique_scope => unique_scope
-      })
+      subject.has_slug(
+        source: @source_attribute,
+        attribute: @has_slug_attribute,
+        unique_scope: unique_scope
+      )
 
       validation = subject.validations.find{ |v| v.type == :uniqueness }
       assert_not_nil validation
@@ -116,7 +103,7 @@ module MuchSlug::ActiveRecord
     end
 
     should "add callbacks using `has_slug`" do
-      subject.has_slug :source => @source_attribute
+      subject.has_slug(source: @source_attribute)
 
       callback = subject.callbacks.find{ |v| v.type == :after_create }
       assert_not_nil callback
@@ -130,7 +117,6 @@ module MuchSlug::ActiveRecord
     should "raise an argument error if `has_slug` isn't passed a source" do
       assert_raises(ArgumentError){ subject.has_slug }
     end
-
   end
 
   class InitTests < UnitTests
@@ -140,14 +126,14 @@ module MuchSlug::ActiveRecord
       @separator         = Factory.non_word_chars.sample
       @allow_underscores = Factory.boolean
 
-      @record_class.has_slug(:source => @source_attribute)
-      @record_class.has_slug({
-        :attribute         => @slug_attribute,
-        :source            => @source_attribute,
-        :preprocessor      => @preprocessor,
-        :separator         => @separator,
-        :allow_underscores => @allow_underscores,
-      })
+      @record_class.has_slug(source: @source_attribute)
+      @record_class.has_slug(
+        source:            @source_attribute,
+        attribute:         @slug_attribute,
+        preprocessor:      @preprocessor,
+        separator:         @separator,
+        allow_underscores: @allow_underscores
+      )
 
       @record = @record_class.new
 
@@ -157,15 +143,20 @@ module MuchSlug::ActiveRecord
       @source_value = "#{Factory.string.downcase}_#{Factory.string.upcase}"
       @record.send("#{@source_attribute}=", @source_value)
 
-      @exp_default_slug = MuchSlug::Slug.new(@source_value, {
-        :preprocessor => MuchSlug.default_preprocessor.to_proc,
-        :separator    => MuchSlug.default_separator
-      })
-      @exp_custom_slug = MuchSlug::Slug.new(@source_value, {
-        :preprocessor      => @preprocessor.to_proc,
-        :separator         => @separator,
-        :allow_underscores => @allow_underscores
-      })
+      @exp_default_slug =
+        MuchSlug::Slug.new(
+          @source_value,
+          preprocessor:      MuchSlug.default_preprocessor.to_proc,
+          separator:         MuchSlug.default_separator,
+          allow_underscores: true
+        )
+      @exp_custom_slug =
+        MuchSlug::Slug.new(
+          @source_value,
+          preprocessor:      @preprocessor.to_proc,
+          separator:         @separator,
+          allow_underscores: @allow_underscores
+        )
     end
     subject{ @record }
 
@@ -224,15 +215,15 @@ module MuchSlug::ActiveRecord
 
       subject.instance_eval{ much_slug_has_slug_generate_slugs }
 
-      exp = MuchSlug::Slug.new(slug_source, {
-        :preprocessor      => @preprocessor.to_proc,
-        :separator         => @separator,
-        :allow_underscores => @allow_underscores
-      })
+      exp =
+        MuchSlug::Slug.new(
+          slug_source,
+          preprocessor:      @preprocessor.to_proc,
+          separator:         @separator,
+          allow_underscores: @allow_underscores
+        )
       assert_equal exp, subject.send(@slug_attribute)
       assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
     end
-
   end
-
 end

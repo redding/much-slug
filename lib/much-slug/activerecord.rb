@@ -6,22 +6,35 @@ module MuchSlug
     include MuchPlugin
 
     plugin_included do
-      @much_slug_has_slug_configs = MuchSlug::Configs.new
+      @much_slug_has_slug_registry = MuchSlug::HasSlugRegistry.new
     end
 
     plugin_class_methods do
-      def has_slug(options = nil)
-        options ||= {}
-        attribute = MuchSlug.set_has_slug(@much_slug_has_slug_configs, options)
+      def has_slug(
+            source:,
+            attribute: nil,
+            preprocessor: nil,
+            separator: nil,
+            allow_underscores: nil,
+            skip_unique_validation: false,
+            unique_scope: nil)
+        registered_attribute =
+          self.much_slug_has_slug_registry.register(
+            attribute: attribute,
+            source: source,
+            preprocessor: preprocessor,
+            separator: separator,
+            allow_underscores: allow_underscores,
+          )
 
         # since the slug isn't written until an after callback we can't always
         # validate presence of it
-        validates_presence_of(attribute, :on => :update)
+        validates_presence_of(registered_attribute, :on => :update)
 
-        if options[:skip_unique_validation] != true
-          validates_uniqueness_of(attribute, {
+        unless skip_unique_validation
+          validates_uniqueness_of(registered_attribute, {
             :case_sensitive => true,
-            :scope          => options[:unique_scope]
+            :scope          => unique_scope
           })
         end
 
@@ -29,8 +42,8 @@ module MuchSlug
         after_update :much_slug_has_slug_generate_slugs
       end
 
-      def much_slug_has_slug_configs
-        @much_slug_has_slug_configs
+      def much_slug_has_slug_registry
+        @much_slug_has_slug_registry
       end
     end
 

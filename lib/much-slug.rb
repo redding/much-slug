@@ -1,10 +1,10 @@
 require "much-slug/version"
-require "much-slug/configs"
+require "much-slug/has_slug_registry"
 require "much-slug/slug"
 
 module MuchSlug
   def self.default_attribute
-    :slug
+    "slug"
   end
 
   def self.default_preprocessor
@@ -15,17 +15,8 @@ module MuchSlug
     "-".freeze
   end
 
-  def self.set_has_slug(configs, options)
-    raise(ArgumentError, "a source must be provided") unless options[:source]
-
-    (options[:attribute] || self.default_attribute).to_sym.tap do |a|
-      configs[a].merge!({
-        :source_proc       => options[:source].to_proc,
-        :preprocessor_proc => (options[:preprocessor] || self.default_preprocessor).to_proc,
-        :separator         => options[:separator] || self.default_separator,
-        :allow_underscores => !!options[:allow_underscores]
-      })
-    end
+  def self.default_allow_underscores
+    true
   end
 
   def self.reset_slug(record_instance, attribute)
@@ -34,23 +25,22 @@ module MuchSlug
   end
 
   def self.has_slug_generate_slugs(record_instance)
-     record_instance.class.much_slug_has_slug_configs.each do |attr_name, config|
-      if record_instance.send(attr_name).to_s.empty?
-        slug_source = record_instance.instance_eval(&config[:source_proc])
-      else
-        slug_source = record_instance.send(attr_name)
+    record_instance.class.much_slug_has_slug_registry.each do |attribute, entry|
+      slug_source = record_instance.send(attribute)
+      if slug_source.to_s.empty?
+        slug_source = record_instance.instance_eval(&entry.source_proc)
       end
 
       generated_slug =
         Slug.new(
           slug_source,
-          preprocessor:      config[:preprocessor_proc],
-          separator:         config[:separator],
-          allow_underscores: config[:allow_underscores]
+          preprocessor:      entry.preprocessor_proc,
+          separator:         entry.separator,
+          allow_underscores: entry.allow_underscores
         )
-      next if record_instance.send(attr_name) == generated_slug
-      record_instance.send("#{attr_name}=", generated_slug)
-      yield attr_name, generated_slug
+      next if record_instance.send(attribute) == generated_slug
+      record_instance.send("#{attribute}=", generated_slug)
+      yield attribute, generated_slug
     end
   end
 end

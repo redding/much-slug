@@ -19,6 +19,14 @@ module MuchSlug
     true
   end
 
+  def self.update_slugs(record)
+    record.send("much_slug_update_slugs")
+  end
+
+  def self.update_slugs!(record)
+    record.send("much_slug_update_slugs!")
+  end
+
   def self.has_slug_changed_slug_values(record_instance)
     record_instance.class.much_slug_has_slug_registry.each do |attribute, entry|
       slug_source_value = record_instance.instance_eval(&entry.source_proc)

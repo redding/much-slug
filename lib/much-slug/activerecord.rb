@@ -56,6 +56,14 @@ module MuchSlug
           self.update_column(attribute, slug_value)
         end
       end
+
+      def much_slug_update_slugs
+        self.save
+      end
+
+      def much_slug_update_slugs!
+        self.save!
+      end
     end
   end
 end

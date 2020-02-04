@@ -14,10 +14,20 @@ module MuchSlug::ActiveRecord
         include MuchSlug::ActiveRecord
         attr_accessor source_attribute, slug_attribute, MuchSlug.default_attribute
         attr_reader :slug_db_column_updates
+        attr_reader :save_called, :save_bang_called
 
         def update_column(*args)
           @slug_db_column_updates ||= []
           @slug_db_column_updates << args
+        end
+
+        # TODO: move into Ardb::RecordSpy or something?
+        def save
+          @save_called = true
+        end
+
+        def save!
+          @save_bang_called = true
         end
       end
 
@@ -174,8 +184,8 @@ module MuchSlug::ActiveRecord
     end
 
     should "not set its slug if it hasn't changed" do
-      @record.send("#{MuchSlug.default_attribute}=", @exp_default_slug)
-      @record.send("#{@slug_attribute}=",   @exp_custom_slug)
+      subject.send("#{MuchSlug.default_attribute}=", @exp_default_slug)
+      subject.send("#{@slug_attribute}=",   @exp_custom_slug)
 
       subject.instance_eval{ much_slug_has_slug_update_slug_values }
       assert_nil subject.slug_db_column_updates
@@ -183,7 +193,7 @@ module MuchSlug::ActiveRecord
 
     should "slug its source even if its already a valid slug" do
       slug_source = Factory.slug
-      @record.send("#{@source_attribute}=", slug_source)
+      subject.send("#{@source_attribute}=", slug_source)
       # ensure the preprocessor doesn't change our source
       Assert.stub(slug_source, @preprocessor){ slug_source }
 
@@ -198,6 +208,14 @@ module MuchSlug::ActiveRecord
         )
       assert_equal exp, subject.send(@slug_attribute)
       assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
+    end
+
+    should "manually update slugs" do
+      MuchSlug.update_slugs(@record)
+      assert_true @record.save_called
+
+      MuchSlug.update_slugs!(@record)
+      assert_true @record.save_bang_called
     end
   end
 end

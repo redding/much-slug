@@ -38,8 +38,8 @@ module MuchSlug
           })
         end
 
-        after_create :much_slug_has_slug_generate_slugs
-        after_update :much_slug_has_slug_generate_slugs
+        after_create :much_slug_has_slug_update_slug_values
+        after_update :much_slug_has_slug_update_slug_values
       end
 
       def much_slug_has_slug_registry
@@ -50,13 +50,10 @@ module MuchSlug
     plugin_instance_methods do
       private
 
-      def reset_slug(attribute = nil)
-        MuchSlug.reset_slug(self, attribute)
-      end
-
-      def much_slug_has_slug_generate_slugs
-        MuchSlug.has_slug_generate_slugs(self) do |attr_name, generated_slug|
-          self.update_column(attr_name, generated_slug)
+      def much_slug_has_slug_update_slug_values
+        MuchSlug.has_slug_changed_slug_values(self) do |attribute, slug_value|
+          self.send("#{attribute}=", slug_value)
+          self.update_column(attribute, slug_value)
         end
       end
     end

@@ -107,11 +107,11 @@ module MuchSlug::ActiveRecord
 
       callback = subject.callbacks.find{ |v| v.type == :after_create }
       assert_not_nil callback
-      assert_equal [:much_slug_has_slug_generate_slugs], callback.args
+      assert_equal [:much_slug_has_slug_update_slug_values], callback.args
 
       callback = subject.callbacks.find{ |v| v.type == :after_update }
       assert_not_nil callback
-      assert_equal [:much_slug_has_slug_generate_slugs], callback.args
+      assert_equal [:much_slug_has_slug_update_slug_values], callback.args
     end
 
     should "raise an argument error if `has_slug` isn't passed a source" do
@@ -160,23 +160,8 @@ module MuchSlug::ActiveRecord
     end
     subject{ @record }
 
-    should "reset its slug using `reset_slug`" do
-      # reset the default attribute
-      subject.send("#{MuchSlug.default_attribute}=", Factory.slug)
-      assert_not_nil subject.send(MuchSlug.default_attribute)
-      subject.instance_eval{ reset_slug }
-      assert_nil subject.send(MuchSlug.default_attribute)
-
-      # reset a custom attribute
-      subject.send("#{@slug_attribute}=", Factory.slug)
-      assert_not_nil subject.send(@slug_attribute)
-      sa = @slug_attribute
-      subject.instance_eval{ reset_slug(sa) }
-      assert_nil subject.send(@slug_attribute)
-    end
-
     should "default its slug attribute" do
-      subject.instance_eval{ much_slug_has_slug_generate_slugs }
+      subject.instance_eval{ much_slug_has_slug_update_slug_values }
       assert_equal 2, subject.slug_db_column_updates.size
 
       exp = @exp_default_slug
@@ -192,19 +177,8 @@ module MuchSlug::ActiveRecord
       @record.send("#{MuchSlug.default_attribute}=", @exp_default_slug)
       @record.send("#{@slug_attribute}=",   @exp_custom_slug)
 
-      subject.instance_eval{ much_slug_has_slug_generate_slugs }
+      subject.instance_eval{ much_slug_has_slug_update_slug_values }
       assert_nil subject.slug_db_column_updates
-    end
-
-    should "slug its slug attribute value if set" do
-      @record.send("#{@slug_attribute}=", @source_value)
-      # change the source attr to some random value, to avoid a false positive
-      @record.send("#{@source_attribute}=", Factory.string)
-      subject.instance_eval{ much_slug_has_slug_generate_slugs }
-
-      exp = @exp_custom_slug
-      assert_equal exp, subject.send(@slug_attribute)
-      assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
     end
 
     should "slug its source even if its already a valid slug" do
@@ -213,7 +187,7 @@ module MuchSlug::ActiveRecord
       # ensure the preprocessor doesn't change our source
       Assert.stub(slug_source, @preprocessor){ slug_source }
 
-      subject.instance_eval{ much_slug_has_slug_generate_slugs }
+      subject.instance_eval{ much_slug_has_slug_update_slug_values }
 
       exp =
         MuchSlug::Slug.new(

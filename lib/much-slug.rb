@@ -19,28 +19,19 @@ module MuchSlug
     true
   end
 
-  def self.reset_slug(record_instance, attribute)
-    attribute ||= self.default_attribute
-    record_instance.send("#{attribute}=", nil)
-  end
-
-  def self.has_slug_generate_slugs(record_instance)
+  def self.has_slug_changed_slug_values(record_instance)
     record_instance.class.much_slug_has_slug_registry.each do |attribute, entry|
-      slug_source = record_instance.send(attribute)
-      if slug_source.to_s.empty?
-        slug_source = record_instance.instance_eval(&entry.source_proc)
-      end
+      slug_source_value = record_instance.instance_eval(&entry.source_proc)
 
-      generated_slug =
+      slug_value =
         Slug.new(
-          slug_source,
+          slug_source_value,
           preprocessor:      entry.preprocessor_proc,
           separator:         entry.separator,
           allow_underscores: entry.allow_underscores
         )
-      next if record_instance.send(attribute) == generated_slug
-      record_instance.send("#{attribute}=", generated_slug)
-      yield attribute, generated_slug
+      next if record_instance.send(attribute) == slug_value
+      yield attribute, slug_value
     end
   end
 end

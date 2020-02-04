@@ -158,7 +158,7 @@ module MuchSlug::ActiveRecord
           @source_value,
           preprocessor:      MuchSlug.default_preprocessor.to_proc,
           separator:         MuchSlug.default_separator,
-          allow_underscores: true
+          allow_underscores: false
         )
       @exp_custom_slug =
         MuchSlug::Slug.new(

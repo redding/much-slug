@@ -17,7 +17,7 @@ module MuchSlug
       assert_equal "slug", subject.default_attribute
       assert_equal :to_s, subject.default_preprocessor
       assert_equal "-", subject.default_separator
-      assert_equal true, subject.default_allow_underscores
+      assert_equal false, subject.default_allow_underscores
     end
   end
 end

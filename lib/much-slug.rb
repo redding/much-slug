@@ -16,7 +16,7 @@ module MuchSlug
   end
 
   def self.default_allow_underscores
-    true
+    false
   end
 
   def self.update_slugs(record)

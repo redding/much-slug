@@ -20,16 +20,23 @@ module MuchSlug
   end
 
   def self.update_slugs(record)
-    record.send("much_slug_update_slugs")
-  end
-
-  def self.update_slugs!(record)
-    record.send("much_slug_update_slugs!")
+    record.send("much_slug_has_slug_update_slug_values")
+    true
   end
 
   def self.has_slug_changed_slug_values(record_instance)
     record_instance.class.much_slug_has_slug_registry.each do |attribute, entry|
-      slug_source_value = record_instance.instance_eval(&entry.source_proc)
+      # ArgumentError: no receiver given` raised when calling `instance_exec`
+      # on non-lambda Procs, specifically e.g :downcase.to_proc.
+      # Can't call `instance_eval` on stabby lambdas b/c `instance_eval` auto
+      # passes the receiver as the first argument to the block and stabby
+      # lambdas may not expect that and will ArgumentError.
+      slug_source_value =
+        if entry.source_proc.lambda?
+          record_instance.instance_exec(&entry.source_proc)
+        else
+          record_instance.instance_eval(&entry.source_proc)
+        end
 
       slug_value =
         Slug.new(

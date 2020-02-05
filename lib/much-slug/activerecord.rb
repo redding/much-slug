@@ -40,6 +40,8 @@ module MuchSlug
 
         after_create :much_slug_has_slug_update_slug_values
         after_update :much_slug_has_slug_update_slug_values
+
+        registered_attribute
       end
 
       def much_slug_has_slug_registry
@@ -55,14 +57,6 @@ module MuchSlug
           self.send("#{attribute}=", slug_value)
           self.update_column(attribute, slug_value)
         end
-      end
-
-      def much_slug_update_slugs
-        self.save
-      end
-
-      def much_slug_update_slugs!
-        self.save!
       end
     end
   end

@@ -20,15 +20,6 @@ module MuchSlug::ActiveRecord
           @slug_db_column_updates ||= []
           @slug_db_column_updates << args
         end
-
-        # TODO: move into Ardb::RecordSpy or something?
-        def save
-          @save_called = true
-        end
-
-        def save!
-          @save_bang_called = true
-        end
       end
 
       @has_slug_attribute = Factory.string
@@ -136,14 +127,18 @@ module MuchSlug::ActiveRecord
       @separator         = Factory.non_word_chars.sample
       @allow_underscores = Factory.boolean
 
-      @record_class.has_slug(source: @source_attribute)
-      @record_class.has_slug(
-        source:            @source_attribute,
-        attribute:         @slug_attribute,
-        preprocessor:      @preprocessor,
-        separator:         @separator,
-        allow_underscores: @allow_underscores
-      )
+      @registered_default_attribute =
+        @record_class.has_slug(source: @source_attribute)
+
+      source_attribute = @source_attribute
+      @registered_custom_attribute =
+        @record_class.has_slug(
+          source:            -> { self.send(source_attribute) },
+          attribute:         @slug_attribute,
+          preprocessor:      @preprocessor,
+          separator:         @separator,
+          allow_underscores: @allow_underscores
+        )
 
       @record = @record_class.new
 
@@ -171,6 +166,9 @@ module MuchSlug::ActiveRecord
     subject{ @record }
 
     should "default its slug attribute" do
+      assert_equal MuchSlug.default_attribute, @registered_default_attribute
+      assert_equal @slug_attribute, @registered_custom_attribute
+
       subject.instance_eval{ much_slug_has_slug_update_slug_values }
       assert_equal 2, subject.slug_db_column_updates.size
 
@@ -211,11 +209,18 @@ module MuchSlug::ActiveRecord
     end
 
     should "manually update slugs" do
-      MuchSlug.update_slugs(@record)
-      assert_true @record.save_called
+      result = MuchSlug.update_slugs(@record)
 
-      MuchSlug.update_slugs!(@record)
-      assert_true @record.save_bang_called
+      assert_true result
+      assert_equal 2, subject.slug_db_column_updates.size
+
+      exp = @exp_default_slug
+      assert_equal exp, subject.send(MuchSlug.default_attribute)
+      assert_includes [MuchSlug.default_attribute, exp], subject.slug_db_column_updates
+
+      exp = @exp_custom_slug
+      assert_equal exp, subject.send(@slug_attribute)
+      assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
     end
   end
 end

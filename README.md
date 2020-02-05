@@ -168,9 +168,7 @@ project.full_slug # => "123-Sprockets_2-0"
 
 #### Manual Slug Updates
 
-Slugs are updated anytime a record is saved with changes that affect the slug. You can trigger this anytime by just saving the records.
-
-If you want a more explicit, intention revealing way to update the slugs, use `MuchSlug.update_slugs` or `MuchSlug.update_slugs!`:
+Slugs are updated anytime a record is saved with changes that affect the slug. If you want an explicit, intention-revealing way to update the slugs manually, use `MuchSlug.update_slugs`:
 
 ```ruby
 project = ProjectRecord.last

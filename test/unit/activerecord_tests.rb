@@ -77,6 +77,8 @@ module MuchSlug::ActiveRecord
       assert_equal [exp_attr_name], validation.columns
       assert_equal true, validation.options[:case_sensitive]
       assert_nil validation.options[:scope]
+      assert_equal true, validation.options[:allow_nil]
+      assert_equal true, validation.options[:allow_blank]
     end
 
     should "not add a unique validation if skipping unique validation" do

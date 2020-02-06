@@ -34,7 +34,9 @@ module MuchSlug
         unless skip_unique_validation
           validates_uniqueness_of(registered_attribute, {
             :case_sensitive => true,
-            :scope          => unique_scope
+            :scope          => unique_scope,
+            :allow_nil      => true,
+            :allow_blank    => true
           })
         end
 

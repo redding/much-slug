@@ -9,12 +9,32 @@ require "ardb/record_spy"
 module MuchSlug::ActiveRecord
   class UnitTests < Assert::Context
     desc "MuchSlug::ActiveRecord"
+    subject{ unit_module }
+
+    let(:unit_module) { MuchSlug::ActiveRecord }
+  end
+
+  class ReceiverTests < UnitTests
+    desc "receiver"
+    subject { receiver_class }
+
     setup do
-      source_attribute = @source_attribute = Factory.string.to_sym
-      slug_attribute   = @slug_attribute   = Factory.string
-      @record_class = Ardb::RecordSpy.new do
+      Assert.stub_tap_on_call(
+        receiver_class.much_slug_has_slug_registry,
+        :register
+      ) { |_, call|
+        @register_call = call
+      }
+    end
+
+    let(:receiver_class) {
+      attr_source_attribute = source_attribute
+      attr_slug_attribute   = slug_attribute
+
+      Ardb::RecordSpy.new do
         include MuchSlug::ActiveRecord
-        attr_accessor source_attribute, slug_attribute, MuchSlug.default_attribute
+        attr_accessor attr_source_attribute, attr_slug_attribute
+        attr_accessor MuchSlug.default_attribute
         attr_reader :slug_db_column_updates
         attr_reader :save_called, :save_bang_called
 
@@ -23,208 +43,222 @@ module MuchSlug::ActiveRecord
           @slug_db_column_updates << args
         end
       end
+    }
+    let(:source_attribute) { Factory.symbol }
+    let(:slug_attribute) { Factory.string }
 
-      @has_slug_attribute = Factory.string
-      @has_slug_preprocessor = :downcase
-      @has_slug_separator = Factory.non_word_chars.sample
-      @has_slug_allow_underscores = Factory.boolean
-
-      Assert.stub_tap(@record_class.much_slug_has_slug_registry, :register) { |**kargs|
-        @register_called_with = kargs
-      }
-    end
-    subject{ @record_class }
+    let(:has_slug_attribute) { Factory.string }
+    let(:has_slug_preprocessor) { :downcase }
+    let(:has_slug_separator) { Factory.non_word_chars.sample }
+    let(:has_slug_allow_underscores) { Factory.boolean }
 
     should have_imeths :has_slug
     should have_imeths :much_slug_has_slug_registry
 
     should "not have any has_slug registry entries by default" do
-      assert_kind_of MuchSlug::HasSlugRegistry, subject.much_slug_has_slug_registry
-      assert_empty subject.much_slug_has_slug_registry
+      assert_that(subject.much_slug_has_slug_registry)
+        .is_an_instance_of(MuchSlug::HasSlugRegistry)
+      assert_that(subject.much_slug_has_slug_registry.empty?).is_true
     end
 
     should "register a new has_slug entry using `has_slug`" do
       subject.has_slug(
-        source: @source_attribute,
-        attribute: @has_slug_attribute,
-        preprocessor: @has_slug_preprocessor,
-        separator: @has_slug_separator,
-        allow_underscores: @has_slug_allow_underscores
+        source:            source_attribute,
+        attribute:         has_slug_attribute,
+        preprocessor:      has_slug_preprocessor,
+        separator:         has_slug_separator,
+        allow_underscores: has_slug_allow_underscores
       )
 
-      exp_kargs = {
-        attribute: @has_slug_attribute,
-        source: @source_attribute,
-        preprocessor: @has_slug_preprocessor,
-        separator: @has_slug_separator,
-        allow_underscores: @has_slug_allow_underscores
-      }
-      assert_equal exp_kargs, @register_called_with
+      assert_that(@register_call.kargs)
+        .equals(
+          attribute:         has_slug_attribute,
+          source:            source_attribute,
+          preprocessor:      has_slug_preprocessor,
+          separator:         has_slug_separator,
+          allow_underscores: has_slug_allow_underscores
+        )
     end
 
     should "add validations using `has_slug`" do
       subject.has_slug(
-        source: @source_attribute,
-        attribute: @has_slug_attribute
+        source:    source_attribute,
+        attribute: has_slug_attribute
       )
-      exp_attr_name = @has_slug_attribute
 
       validation = subject.validations.find{ |v| v.type == :presence }
-      assert_not_nil validation
-      assert_equal [exp_attr_name], validation.columns
-      assert_equal :update, validation.options[:on]
+      assert_that(validation).is_not_nil
+      assert_that(validation.columns).equals([has_slug_attribute])
+      assert_that(validation.options[:on]).equals(:update)
 
       validation = subject.validations.find{ |v| v.type == :uniqueness }
-      assert_not_nil validation
-      assert_equal [exp_attr_name], validation.columns
-      assert_equal true, validation.options[:case_sensitive]
-      assert_nil validation.options[:scope]
-      assert_equal true, validation.options[:allow_nil]
-      assert_equal true, validation.options[:allow_blank]
+      assert_that(validation).is_not_nil
+      assert_that(validation.columns).equals([has_slug_attribute])
+      assert_that(validation.options[:case_sensitive]).is_true
+      assert_that(validation.options[:scope]).is_nil
+      assert_that(validation.options[:allow_nil]).is_true
+      assert_that(validation.options[:allow_blank]).is_true
     end
 
     should "not add a unique validation if skipping unique validation" do
       subject.has_slug(
-        source: @source_attribute,
-        attribute: @has_slug_attribute,
+        source:                 source_attribute,
+        attribute:              has_slug_attribute,
         skip_unique_validation: true
       )
 
       validation = subject.validations.find{ |v| v.type == :uniqueness }
-      assert_nil validation
+      assert_that(validation).is_nil
     end
 
     should "allow customizing its validations using `has_slug`" do
       unique_scope = Factory.string.to_sym
       subject.has_slug(
-        source: @source_attribute,
-        attribute: @has_slug_attribute,
+        source:       source_attribute,
+        attribute:    has_slug_attribute,
         unique_scope: unique_scope
       )
 
       validation = subject.validations.find{ |v| v.type == :uniqueness }
-      assert_not_nil validation
-      assert_equal unique_scope, validation.options[:scope]
+      assert_that(validation).is_not_nil
+      assert_that(validation.options[:scope]).equals(unique_scope)
     end
 
     should "add callbacks using `has_slug`" do
-      subject.has_slug(source: @source_attribute)
+      subject.has_slug(source: source_attribute)
 
       callback = subject.callbacks.find{ |v| v.type == :after_create }
-      assert_not_nil callback
-      assert_equal [:much_slug_has_slug_update_slug_values], callback.args
+      assert_that(callback).is_not_nil
+      assert_that(callback.args)
+        .equals([:much_slug_has_slug_update_slug_values])
 
       callback = subject.callbacks.find{ |v| v.type == :after_update }
-      assert_not_nil callback
-      assert_equal [:much_slug_has_slug_update_slug_values], callback.args
+      assert_that(callback).is_not_nil
+      assert_that(callback.args)
+        .equals([:much_slug_has_slug_update_slug_values])
     end
 
     should "raise an argument error if `has_slug` isn't passed a source" do
-      assert_raises(ArgumentError){ subject.has_slug }
+      assert_that {
+        subject.has_slug
+      }.raises(ArgumentError)
     end
   end
 
-  class InitTests < UnitTests
+  class ReceiverInitTests < ReceiverTests
     desc "when init"
+    subject{ receiver }
+
     setup do
-      @preprocessor      = [:downcase, :upcase, :capitalize].sample
-      @separator         = Factory.non_word_chars.sample
-      @allow_underscores = Factory.boolean
+      registered_default_attribute
+      registered_custom_attribute
 
-      @registered_default_attribute =
-        @record_class.has_slug(source: @source_attribute)
-
-      source_attribute = @source_attribute
-      @registered_custom_attribute =
-        @record_class.has_slug(
-          source:            -> { self.send(source_attribute) },
-          attribute:         @slug_attribute,
-          preprocessor:      @preprocessor,
-          separator:         @separator,
-          allow_underscores: @allow_underscores
-        )
-
-      @record = @record_class.new
-
-      # create a string that has mixed case and an underscore so we can test
-      # that it uses the preprocessor and allow underscores options when
-      # generating a slug
-      @source_value = "#{Factory.string.downcase}_#{Factory.string.upcase}"
-      @record.send("#{@source_attribute}=", @source_value)
-
-      @exp_default_slug =
-        MuchSlug::Slug.new(
-          @source_value,
-          preprocessor:      MuchSlug.default_preprocessor.to_proc,
-          separator:         MuchSlug.default_separator,
-          allow_underscores: false
-        )
-      @exp_custom_slug =
-        MuchSlug::Slug.new(
-          @source_value,
-          preprocessor:      @preprocessor.to_proc,
-          separator:         @separator,
-          allow_underscores: @allow_underscores
-        )
+      subject.public_send("#{source_attribute}=", source_value)
     end
-    subject{ @record }
+
+    let(:receiver) { receiver_class.new }
+
+    let(:registered_default_attribute) {
+      receiver_class.has_slug(source: source_attribute)
+    }
+    let(:registered_custom_attribute) {
+      block_source_attribute = source_attribute
+
+      receiver_class.has_slug(
+        source:            -> { public_send(block_source_attribute) },
+        attribute:         slug_attribute,
+        preprocessor:      preprocessor,
+        separator:         separator,
+        allow_underscores: allow_underscores
+      )
+    }
+    let(:preprocessor) { [:downcase, :upcase, :capitalize].sample }
+    let(:separator) { Factory.non_word_chars.sample }
+    let(:allow_underscores) { Factory.boolean }
+
+    # create a string that has mixed case and an underscore so we can test
+    # that it uses the preprocessor and allow underscores options when
+    # generating a slug
+    let(:source_value) {
+      "#{Factory.string.downcase}_#{Factory.string.upcase}"
+    }
+
+    let(:exp_default_slug) {
+      MuchSlug::Slug.new(
+        source_value,
+        preprocessor:      MuchSlug.default_preprocessor.to_proc,
+        separator:         MuchSlug.default_separator,
+        allow_underscores: false
+      )
+    }
+    let(:exp_custom_slug) {
+      MuchSlug::Slug.new(
+        source_value,
+        preprocessor:      preprocessor.to_proc,
+        separator:         separator,
+        allow_underscores: allow_underscores
+      )
+    }
 
     should "default its slug attribute" do
-      assert_equal MuchSlug.default_attribute, @registered_default_attribute
-      assert_equal @slug_attribute, @registered_custom_attribute
+      assert_that(registered_default_attribute)
+        .equals(MuchSlug.default_attribute)
+      assert_that(registered_custom_attribute).equals(slug_attribute)
 
       subject.instance_eval{ much_slug_has_slug_update_slug_values }
-      assert_equal 2, subject.slug_db_column_updates.size
+      assert_that(subject.slug_db_column_updates.size).equals(2)
 
-      exp = @exp_default_slug
-      assert_equal exp, subject.send(MuchSlug.default_attribute)
-      assert_includes [MuchSlug.default_attribute, exp], subject.slug_db_column_updates
+      assert_that(subject.public_send(MuchSlug.default_attribute)).
+        equals(exp_default_slug)
+      assert_that(subject.slug_db_column_updates)
+        .includes([MuchSlug.default_attribute, exp_default_slug])
 
-      exp = @exp_custom_slug
-      assert_equal exp, subject.send(@slug_attribute)
-      assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
+      assert_that(subject.public_send(slug_attribute)).equals(exp_custom_slug)
+      assert_that(subject.slug_db_column_updates)
+        .includes([slug_attribute, exp_custom_slug])
     end
 
     should "not set its slug if it hasn't changed" do
-      subject.send("#{MuchSlug.default_attribute}=", @exp_default_slug)
-      subject.send("#{@slug_attribute}=",   @exp_custom_slug)
+      subject.public_send("#{MuchSlug.default_attribute}=", exp_default_slug)
+      subject.public_send("#{slug_attribute}=",   exp_custom_slug)
 
       subject.instance_eval{ much_slug_has_slug_update_slug_values }
-      assert_nil subject.slug_db_column_updates
+      assert_that(subject.slug_db_column_updates).is_nil
     end
 
     should "slug its source even if its already a valid slug" do
       slug_source = Factory.slug
-      subject.send("#{@source_attribute}=", slug_source)
+      subject.public_send("#{source_attribute}=", slug_source)
       # ensure the preprocessor doesn't change our source
-      Assert.stub(slug_source, @preprocessor){ slug_source }
+      Assert.stub(slug_source, preprocessor){ slug_source }
 
       subject.instance_eval{ much_slug_has_slug_update_slug_values }
 
       exp =
         MuchSlug::Slug.new(
           slug_source,
-          preprocessor:      @preprocessor.to_proc,
-          separator:         @separator,
-          allow_underscores: @allow_underscores
+          preprocessor:      preprocessor.to_proc,
+          separator:         separator,
+          allow_underscores: allow_underscores
         )
-      assert_equal exp, subject.send(@slug_attribute)
-      assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
+      assert_that(subject.public_send(slug_attribute)).equals(exp)
+      assert_that(subject.slug_db_column_updates)
+        .includes([slug_attribute, exp])
     end
 
     should "manually update slugs" do
-      result = MuchSlug.update_slugs(@record)
+      result = MuchSlug.update_slugs(subject)
+      assert_that(result).is_true
+      assert_that(subject.slug_db_column_updates.size).equals(2)
 
-      assert_true result
-      assert_equal 2, subject.slug_db_column_updates.size
+      assert_that(subject.public_send(MuchSlug.default_attribute))
+        .equals(exp_default_slug)
+      assert_that(subject.slug_db_column_updates)
+        .includes([MuchSlug.default_attribute, exp_default_slug])
 
-      exp = @exp_default_slug
-      assert_equal exp, subject.send(MuchSlug.default_attribute)
-      assert_includes [MuchSlug.default_attribute, exp], subject.slug_db_column_updates
-
-      exp = @exp_custom_slug
-      assert_equal exp, subject.send(@slug_attribute)
-      assert_includes [@slug_attribute, exp], subject.slug_db_column_updates
+      assert_that(subject.public_send(slug_attribute)).equals(exp_custom_slug)
+      assert_that(subject.slug_db_column_updates)
+        .includes([slug_attribute, exp_custom_slug])
     end
   end
 end

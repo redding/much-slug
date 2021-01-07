@@ -14,21 +14,32 @@ module MuchSlug
           preprocessor:,
           separator:,
           allow_underscores:)
-      (attribute || MuchSlug.default_attribute).to_s.tap do |a|
+      attribute         = (attribute || MuchSlug.default_attribute).to_s
+      source_proc       = source.to_proc
+      preprocessor_proc = (preprocessor || MuchSlug.default_preprocessor).to_proc
+      separator         = separator || MuchSlug.default_separator
+      allow_underscores =
         if allow_underscores.nil?
-          allow_underscores = MuchSlug.default_allow_underscores
+          MuchSlug.default_allow_underscores
+        else
+          !!allow_underscores
         end
 
-        entry = self[a]
-        entry.source_proc       = source.to_proc
-        entry.preprocessor_proc = (preprocessor || MuchSlug.default_preprocessor).to_proc
-        entry.separator         = separator || MuchSlug.default_separator
-        entry.allow_underscores = !!allow_underscores
-      end
+      entry = self[attribute]
+      entry.source_proc       = source_proc
+      entry.preprocessor_proc = preprocessor_proc
+      entry.separator         = separator
+      entry.allow_underscores = allow_underscores
+
+      attribute
     end
 
-    class Entry
-      attr_accessor :source_proc, :preprocessor_proc, :separator, :allow_underscores
-    end
+    Entry =
+      Struct.new(
+        :source_proc,
+        :preprocessor_proc,
+        :separator,
+        :allow_underscores
+      )
   end
 end

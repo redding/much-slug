@@ -183,7 +183,7 @@ project.slug # => "123-Sprockets-2-0"
 
 Add this line to your application's Gemfile:
 
-    gem 'much-slug'
+    gem "much-slug"
 
 And then execute:
 

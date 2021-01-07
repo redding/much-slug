@@ -1,4 +1,6 @@
-require 'assert/factory'
+# frozen_string_literal: true
+
+require "assert/factory"
 
 module Factory
   extend Assert::Factory
@@ -11,5 +13,4 @@ module Factory
       ["-", "_"]
     ).freeze
   end
-
 end

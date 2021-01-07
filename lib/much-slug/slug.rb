@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MuchSlug
   module Slug
     def self.new(string, preprocessor:, separator:, allow_underscores: true)

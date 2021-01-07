@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "assert"
 require "much-slug/has_slug_registry"
 

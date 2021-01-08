@@ -11,7 +11,7 @@ MuchSlug creates derived slug values on database records. Typically this means d
 Given a `:slug` field on a record:
 
 ```ruby
-class AddSlugToProjects < ActiveRecord::Migration[5.2]
+class AddSlugToProjects < ActiveRecord::Migration[6.1]
   def change
     add_column(:projects, :slug, :string, index: { unique: true })
   end
@@ -21,14 +21,12 @@ end
 Mix-in `MuchSlug::ActiveRecord` and configure:
 
 ```ruby
-require "much-slug/activerecord"
-
 class ProjectRecord < ApplicationRecord
   self.table_name = "projects"
 
   include MuchSlug::ActiveRecord
   has_slug(
-    source: -> { "#{self.id}-#{self.name}" },
+    source: -> { "#{id}-#{name}" },
   )
 
   # ...
@@ -66,18 +64,16 @@ project.slug # => "124-Do-The-Things"
 By default, the record attribute for a slug is `"slug"`. You can override this when configuring slugs:
 
 ```ruby
-require "much-slug/activerecord"
-
 class ProjectRecord < ApplicationRecord
   self.table_name = "projects"
 
   include MuchSlug::ActiveRecord
   has_slug(
-    source: -> { "#{self.id}-#{self.name}" },
+    source: -> { "#{id}-#{name}" },
   )
   has_slug(
     attribute: :full_slug
-    source:    -> { "#{self.id}-#{self.full_name}" },
+    source:    -> { "#{id}-#{full_name}" },
   )
 
   # ...
@@ -89,19 +85,17 @@ end
 By default, MuchSlug doesn't pre-process the slug value source before generating the slug value. You can specify a custom pre-processor by passing any Proc-like object:
 
 ```ruby
-require "much-slug/activerecord"
-
 class ProjectRecord < ApplicationRecord
   self.table_name = "projects"
 
   include MuchSlug::ActiveRecord
   has_slug(
-    source:       -> { "#{self.id}-#{self.name}" },
+    source:       -> { "#{id}-#{name}" },
     preprocessor: :downcase
   )
   has_slug(
     attribute:    :full_slug
-    source:       -> { "#{self.id}-#{self.full_name}" },
+    source:       -> { "#{id}-#{full_name}" },
     preprocessor: -> { |source_value| source_value[0..30] }
   )
 
@@ -114,14 +108,12 @@ end
 MuchSlug replaces any non-word characters with a separator. This helps make slugs URL-friendly. By default, MuchSlug uses `"-"` for the separator. You can specify a custom separator value when configuring slugs:
 
 ```ruby
-require "much-slug/activerecord"
-
 class ProjectRecord < ApplicationRecord
   self.table_name = "projects"
 
   include MuchSlug::ActiveRecord
   has_slug(
-    source:    -> { "#{self.id}.#{self.name}" },
+    source:    -> { "#{id}.#{name}" },
     separator: "."
   )
 
@@ -140,18 +132,16 @@ project.slug # => "123.Sprockets.2.0"
 By default, MuchSlug doesn't allow underscores in source values and treats them like non-word characters. This means it replaces underscores with the separator. You can override this to allow underscores when configuring slugs:
 
 ```ruby
-require "much-slug/activerecord"
-
 class ProjectRecord < ApplicationRecord
   self.table_name = "projects"
 
   include MuchSlug::ActiveRecord
   has_slug(
-    source: -> { "#{self.id}-#{self.name}" }
+    source: -> { "#{id}-#{name}" }
   )
   has_slug(
     attribute:         :full_slug
-    source:            -> { "#{self.id}-#{self.full_name}" },
+    source:            -> { "#{id}-#{full_name}" },
     allow_underscores: true
 
   # ...

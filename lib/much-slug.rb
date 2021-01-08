@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-require "much-slug/version"
+require "much-slug/activerecord"
 require "much-slug/has_slug_registry"
 require "much-slug/slug"
+require "much-slug/version"
 
 module MuchSlug
   def self.default_attribute
@@ -14,7 +15,7 @@ module MuchSlug
   end
 
   def self.default_separator
-    "-".freeze
+    "-"
   end
 
   def self.default_allow_underscores
@@ -26,8 +27,8 @@ module MuchSlug
     true
   end
 
-  def self.has_slug_changed_slug_values(record_instance)
-    record_instance.class.much_slug_has_slug_registry.each do |attribute, entry|
+  def self.has_slug_changed_slug_values(record)
+    record.class.much_slug_has_slug_registry.each do |attribute, entry|
       # ArgumentError: no receiver given` raised when calling `instance_exec`
       # on non-lambda Procs, specifically e.g :downcase.to_proc.
       # Can't call `instance_eval` on stabby lambdas b/c `instance_eval` auto
@@ -35,9 +36,9 @@ module MuchSlug
       # lambdas may not expect that and will ArgumentError.
       slug_source_value =
         if entry.source_proc.lambda?
-          record_instance.instance_exec(&entry.source_proc)
+          record.instance_exec(&entry.source_proc)
         else
-          record_instance.instance_eval(&entry.source_proc)
+          record.instance_eval(&entry.source_proc)
         end
 
       slug_value =
@@ -47,7 +48,7 @@ module MuchSlug
           separator:         entry.separator,
           allow_underscores: entry.allow_underscores
         )
-      next if record_instance.send(attribute) == slug_value
+      next if record.public_send(attribute) == slug_value
       yield attribute, slug_value
     end
   end

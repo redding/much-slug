@@ -1,15 +1,17 @@
-require "much-plugin"
+# frozen_string_literal: true
+
+require "much-mixin"
 require "much-slug"
 
 module MuchSlug
   module ActiveRecord
-    include MuchPlugin
+    include MuchMixin
 
-    plugin_included do
+    mixin_included do
       @much_slug_has_slug_registry = MuchSlug::HasSlugRegistry.new
     end
 
-    plugin_class_methods do
+    mixin_class_methods do
       def has_slug(
             source:,
             attribute: nil,
@@ -51,7 +53,7 @@ module MuchSlug
       end
     end
 
-    plugin_instance_methods do
+    mixin_instance_methods do
       private
 
       def much_slug_has_slug_update_slug_values

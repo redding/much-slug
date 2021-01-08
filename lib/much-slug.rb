@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "much-slug/version"
 require "much-slug/has_slug_registry"
 require "much-slug/slug"

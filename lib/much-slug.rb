@@ -46,7 +46,7 @@ module MuchSlug
           slug_source_value,
           preprocessor:      entry.preprocessor_proc,
           separator:         entry.separator,
-          allow_underscores: entry.allow_underscores
+          allow_underscores: entry.allow_underscores,
         )
       next if record.public_send(attribute) == slug_value
       yield attribute, slug_value

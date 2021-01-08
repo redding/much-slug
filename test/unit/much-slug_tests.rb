@@ -6,7 +6,7 @@ require "much-slug"
 module MuchSlug
   class UnitTests < Assert::Context
     desc "MuchSlug"
-    subject { MuchSlug }
+    subject{ MuchSlug }
 
     should have_imeths :default_attribute, :default_preprocessor
     should have_imeths :default_separator, :default_allow_underscores

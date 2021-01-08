@@ -6,9 +6,9 @@ require "much-slug/has_slug_registry"
 class MuchSlug::HasSlugRegistry
   class UnitTests < Assert::Context
     desc "MuchSlug::HasSlugRegistry"
-    subject { unit_class }
+    subject{ unit_class }
 
-    let(:unit_class) { MuchSlug::HasSlugRegistry }
+    let(:unit_class){ MuchSlug::HasSlugRegistry }
 
     should "be a Hash" do
       assert_that(subject < ::Hash).is_true
@@ -17,13 +17,13 @@ class MuchSlug::HasSlugRegistry
 
   class InitTests < UnitTests
     desc "when init"
-    subject { unit_class.new }
+    subject{ unit_class.new }
 
-    let(:attribute) { Factory.symbol }
-    let(:source) { :to_s }
-    let(:preprocessor) { :downcase }
-    let(:separator) { "|" }
-    let(:allow_underscores) { Factory.boolean }
+    let(:attribute){ Factory.symbol }
+    let(:source){ :to_s }
+    let(:preprocessor){ :downcase }
+    let(:separator){ "|" }
+    let(:allow_underscores){ Factory.boolean }
 
     should have_imeths :register
 
@@ -38,7 +38,7 @@ class MuchSlug::HasSlugRegistry
           source:            source,
           preprocessor:      preprocessor,
           separator:         separator,
-          allow_underscores: allow_underscores
+          allow_underscores: allow_underscores,
         )
 
       assert_that(registered_attribute).equals(attribute.to_s)
@@ -60,7 +60,7 @@ class MuchSlug::HasSlugRegistry
           source:            source,
           preprocessor:      nil,
           separator:         nil,
-          allow_underscores: nil
+          allow_underscores: nil,
         )
 
       assert_that(registered_attribute).equals(MuchSlug.default_attribute.to_s)
@@ -77,12 +77,12 @@ class MuchSlug::HasSlugRegistry
   class EntryUnitTests < UnitTests
     desc "Entry"
 
-    let(:entry_class) { MuchSlug::HasSlugRegistry::Entry }
+    let(:entry_class){ MuchSlug::HasSlugRegistry::Entry }
   end
 
   class EntryInitTests < EntryUnitTests
     desc "when init"
-    subject { entry_class.new }
+    subject{ entry_class.new }
 
     should have_accessors :source_proc, :preprocessor_proc, :separator
     should have_accessors :allow_underscores

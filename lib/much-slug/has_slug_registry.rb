@@ -6,7 +6,7 @@ module MuchSlug; end
 
 class MuchSlug::HasSlugRegistry < ::Hash
   def initialize
-    super{ |h, k| h[k] = Entry.new }
+    super(){ |h, k| h[k] = Entry.new }
   end
 
   def register(
@@ -18,7 +18,7 @@ class MuchSlug::HasSlugRegistry < ::Hash
     attribute         = (attribute || MuchSlug.default_attribute).to_s
     source_proc       = source.to_proc
     preprocessor_proc = (preprocessor || MuchSlug.default_preprocessor).to_proc
-    separator         = separator || MuchSlug.default_separator
+    separator ||= MuchSlug.default_separator
     allow_underscores =
       if allow_underscores.nil?
         MuchSlug.default_allow_underscores
@@ -40,6 +40,6 @@ class MuchSlug::HasSlugRegistry < ::Hash
       :source_proc,
       :preprocessor_proc,
       :separator,
-      :allow_underscores
+      :allow_underscores,
     )
 end

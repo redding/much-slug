@@ -6,7 +6,7 @@ module Factory
   extend Assert::Factory
 
   def self.non_word_chars
-    ( (" ".."/").to_a +
+    ((" ".."/").to_a +
       (":".."@").to_a +
       ("[".."`").to_a +
       ("{".."~").to_a -

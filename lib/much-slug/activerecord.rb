@@ -40,7 +40,7 @@ module MuchSlug::ActiveRecord
           case_sensitive: true,
           scope:          unique_scope,
           allow_nil:      true,
-          allow_blank:    true
+          allow_blank:    true,
         )
       end
 

@@ -6,18 +6,18 @@ require "much-slug/slug"
 module MuchSlug::Slug
   class UnitTests < Assert::Context
     desc "MuchSlug::Slug"
-    subject { unit_module }
+    subject{ unit_module }
 
-    let(:unit_module) { MuchSlug::Slug }
+    let(:unit_module){ MuchSlug::Slug }
 
-    let(:no_op_pp) { proc{ |slug| slug } }
-    let(:separator) { "-" }
-    let(:kargs) {
+    let(:no_op_pp){ proc{ |slug| slug } }
+    let(:separator){ "-" }
+    let(:kargs) do
       {
-        :preprocessor => no_op_pp,
-        :separator    => separator,
+        preprocessor: no_op_pp,
+        separator: separator,
       }
-    }
+    end
 
     should have_imeths :new
 
@@ -37,7 +37,7 @@ module MuchSlug::Slug
     should "turn invalid chars into a separator" do
       string =
         Array
-          .new(Factory.integer(3)) {
+          .new(Factory.integer(3)){
             "#{Factory.string(3)}#{Factory.non_word_chars.sample}"\
             "#{Factory.string(3)}"
           }
@@ -48,11 +48,11 @@ module MuchSlug::Slug
 
     should "allow passing a custom preprocessor proc" do
       string       = "#{Factory.string}#{separator}#{Factory.string.upcase}"
-      custom_kargs = kargs.merge(:preprocessor => :downcase.to_proc)
+      custom_kargs = kargs.merge(preprocessor: :downcase.to_proc)
       assert_that(subject.new(string, **custom_kargs)).equals(string.downcase)
 
       preprocessor = proc{ |s| s.gsub(/[A-Z]/, "a") }
-      custom_kargs = kargs.merge(:preprocessor => preprocessor)
+      custom_kargs = kargs.merge(preprocessor: preprocessor)
       assert_that(subject.new(string, **custom_kargs))
         .equals(preprocessor.call(string))
     end
@@ -62,17 +62,17 @@ module MuchSlug::Slug
       invalid_char = (Factory.non_word_chars - [separator]).sample
 
       string = "#{Factory.string}#{invalid_char}#{Factory.string}"
-      assert_that(subject.new(string, **kargs.merge(:separator => separator)))
+      assert_that(subject.new(string, **kargs.merge(separator: separator)))
         .equals(string.gsub(/[^\w]+/, separator))
 
       # it won"t change the separator in the strings
       string = "#{Factory.string}#{separator}#{Factory.string}"
-      assert_that(subject.new(string, **kargs.merge(:separator => separator)))
+      assert_that(subject.new(string, **kargs.merge(separator: separator)))
         .equals(string)
 
       # it will change the default separator now
       string = "#{Factory.string}#{separator}#{Factory.string}"
-      assert_that(subject.new(string, **kargs.merge(:separator => separator)))
+      assert_that(subject.new(string, **kargs.merge(separator: separator)))
         .equals(string.gsub(separator, separator))
     end
 
@@ -80,11 +80,11 @@ module MuchSlug::Slug
       string = "#{Factory.string}#{separator}#{Factory.string}"
       assert_that(subject.new(string, **kargs)).equals(string)
 
-      custom_kargs = kargs.merge(:allow_underscores => false)
+      custom_kargs = kargs.merge(allow_underscores: false)
       assert_that(subject.new(string, **custom_kargs))
         .equals(string.gsub("_", separator))
 
-      custom_kargs = kargs.merge(:allow_underscores => true)
+      custom_kargs = kargs.merge(allow_underscores: true)
       assert_that(subject.new(string, **custom_kargs)).equals(string)
     end
 
@@ -96,7 +96,7 @@ module MuchSlug::Slug
       # remove separators that were added from changing invalid chars
       invalid_chars =
         Array
-          .new(Factory.integer(3) + 1) {
+          .new(Factory.integer(3) + 1){
             Factory.non_word_chars.sample
           }
           .join

@@ -25,7 +25,7 @@ class MuchSlug::HasSlugRegistry
     let(:separator){ "|" }
     let(:allow_underscores){ Factory.boolean }
 
-    should have_imeths :register
+    should have_imeths :register, :copy_from
 
     should "default empty entries for unregisterd attributes" do
       assert_that(subject[Factory.string]).is_an_instance_of(unit_class::Entry)
@@ -71,6 +71,45 @@ class MuchSlug::HasSlugRegistry
       assert_that(entry.separator).equals(MuchSlug.default_separator)
       assert_that(entry.allow_underscores)
         .equals(MuchSlug.default_allow_underscores)
+    end
+  end
+
+  class CopyFromTests < InitTests
+    desc "#copy_from"
+
+    setup do
+      parent_has_slug_registry.register(
+        attribute: attribute,
+        source: source,
+        preprocessor: nil,
+        separator: nil,
+        allow_underscores: nil,
+      )
+      parent_has_slug_registry.register(
+        attribute: other_attribute,
+        source: other_source,
+        preprocessor: nil,
+        separator: nil,
+        allow_underscores: nil,
+      )
+    end
+
+    let(:other_attribute){ Factory.symbol }
+    let(:other_source){ :to_s }
+
+    let(:parent_has_slug_registry){ unit_class.new }
+
+    should "copy entries from the passed MuchSlug::HasSlugRegistry" do
+      subject.copy_from(parent_has_slug_registry)
+
+      assert_that(subject[attribute])
+        .equals(parent_has_slug_registry[attribute])
+      assert_that(subject[attribute])
+        .is_not(parent_has_slug_registry[attribute])
+      assert_that(subject[other_attribute])
+        .equals(parent_has_slug_registry[other_attribute])
+      assert_that(subject[other_attribute])
+        .is_not(parent_has_slug_registry[other_attribute])
     end
   end
 

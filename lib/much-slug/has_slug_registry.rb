@@ -35,6 +35,12 @@ class MuchSlug::HasSlugRegistry < ::Hash
     attribute
   end
 
+  def copy_from(has_slug_registry)
+    has_slug_registry.each do |attribute, entry|
+      self[attribute] = entry.dup
+    end
+  end
+
   Entry =
     Struct.new(
       :source_proc,

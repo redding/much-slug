@@ -144,6 +144,26 @@ module MuchSlug::ActiveRecord
     end
   end
 
+  class ReceiverInheritedTests < ReceiverTests
+    desc "is inherited from"
+
+    setup do
+      subject.has_slug(source: :name)
+
+      Assert.stub_tap(MuchSlug::HasSlugRegistry, :new) do |has_slug_registry|
+        Assert.stub_on_call(has_slug_registry, :copy_from) do |call|
+          @has_slug_registry_copy_from_call = call
+        end
+      end
+    end
+
+    should "copy its MuchSlug::HasSlugRegistry to the child class" do
+      Class.new(receiver_class)
+      assert_that(@has_slug_registry_copy_from_call.args)
+        .equals([subject.much_slug_has_slug_registry])
+    end
+  end
+
   class ReceiverInitTests < ReceiverTests
     desc "when init"
     subject{ receiver }

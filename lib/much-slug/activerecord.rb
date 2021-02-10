@@ -9,6 +9,13 @@ module MuchSlug::ActiveRecord
   include MuchMixin
 
   mixin_class_methods do
+    def inherited(child_class)
+      super
+      child_class.much_slug_has_slug_registry.copy_from(
+        much_slug_has_slug_registry,
+      )
+    end
+
     def much_slug_has_slug_registry
       @much_slug_has_slug_registry ||= MuchSlug::HasSlugRegistry.new
     end

@@ -34,8 +34,10 @@ module MuchSlug
       # Can't call `instance_eval` on stabby lambdas b/c `instance_eval` auto
       # passes the receiver as the first argument to the block and stabby
       # lambdas may not expect that and will ArgumentError.
+      # TODO: explain how to_proc now returns lambdas but you can't call
+      # instance_exec on them
       slug_source_value =
-        if entry.source_proc.lambda?
+        if entry.source_proc.lambda? && entry.source_proc.arity.zero?
           record.instance_exec(&entry.source_proc)
         else
           record.instance_eval(&entry.source_proc)

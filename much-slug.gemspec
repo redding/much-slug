@@ -21,11 +21,11 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.required_ruby_version = "~> 2.5"
+  gem.required_ruby_version = ">= 2.5"
 
-  gem.add_development_dependency("ardb",             ["~> 0.29.2"])
-  gem.add_development_dependency("assert",           ["~> 2.19.3"])
+  gem.add_development_dependency("ardb",             ["~> 0.30.0"])
+  gem.add_development_dependency("assert",           ["~> 2.19.8"])
   gem.add_development_dependency("much-style-guide", ["~> 0.6.0"])
 
-  gem.add_dependency("much-mixin", ["~> 0.2.4"])
+  gem.add_dependency("much-mixin", ["~> 0.2.5"])
 end
